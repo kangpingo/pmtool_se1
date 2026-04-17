@@ -169,9 +169,6 @@ Full documentation: [DEPLOY.md](DEPLOY.md)
 
 ## Screenshots
 
-*Dashboard View*
-<img width="1267" height="713" alt="image" src="https://github.com/user-attachments/assets/f01a3586-0ec4-4108-89a8-96eb1757d19c" />
-
 *Project View*
 <img width="1266" height="695" alt="image" src="https://github.com/user-attachments/assets/38749e00-3eb5-4116-b471-c7badd531386" />
 <img width="1269" height="722" alt="image" src="https://github.com/user-attachments/assets/274e96dc-c54f-4edc-a3e1-d3d479ab93ae" />
