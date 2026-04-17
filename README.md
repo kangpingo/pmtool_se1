@@ -1,121 +1,168 @@
-# PMTools – Lightweight Project Management
+# PMTool SE1 – Lightweight Project Management
 
 A modern, responsive project management system designed for teams and individuals to track tasks, manage projects, and visualize progress through intuitive views including Kanban boards and Gantt charts.
 
 ## Key Features
 
+### Project & Task Management
 - **Dashboard** – Overview of active projects, tasks, and deadlines at a glance
+- **Projects** – Create, edit, copy, and delete projects with full metadata
+- **Tasks** – Full task lifecycle management with status tracking
 - **Kanban Board** – Visual task management with drag-and-drop style columns
 - **Gantt Chart** – Timeline view for project scheduling and planning
 - **Task Filtering** – Filter tasks by status, project, and time windows
+- **Bidirectional Date-Duration Sync** – Adjusting dates auto-updates duration; changing duration auto-updates end date
+
+### User Management
+- **User Registration** – Account creation with validation (letters, numbers, underscore only)
+- **User Authentication** – Cookie-based login with hardcoded admin account support
+- **User List** – View all system users (account, display name, email) from settings menu
+- **User Profile** – Editable display name and email; account name is read-only
+
+### UI/UX
 - **Dark/Light Theme** – Seamless theme switching for comfortable viewing
-- **Internationalization** – Support for Chinese and English languages
+- **Internationalization** – Full Chinese and English language support
+- **About Dialog** – Project information accessible from header
+- **Message Board** – Quick access from header for team communication
+
+### Data Management
+- **Data Import/Export** – Export and import project/task data via JSON
+- **Data Initialization** – Reset database with sample data
+- **Operation Logs** – Track user actions with granular button/menu-level logging
 
 ## Tech Stack
 
-### Frontend Framework
+### Frontend
 - **React 19** with **TypeScript** for type-safe development
 - **Next.js 15** (App Router) for server-side rendering and routing
+- **shadcn/ui** + **Radix UI** for accessible components
+- **Tailwind CSS 3.4** for styling
+- **Lucide React** for icons
 
-### UI Library & Styling
-- **shadcn/ui** – Radix UI-based accessible component library
-- **Tailwind CSS 3.4** – Utility-first CSS framework
-- **Lucide React** – Icon library
-
-### State & Date Management
-- **date-fns** & **date-fns-tz** – Modern date manipulation and timezone handling
-
-### Build & Development
-- **TypeScript 5** – Static type checking
-- **Vercel** deployment ready
-
-### Backend (via Prisma)
+### Backend
 - **Prisma ORM** – Type-safe database access
-- Compatible with PostgreSQL, MySQL, SQLite
+- **PostgreSQL** (production) / **SQLite** (development)
+
+### Date & State
+- **date-fns** & **date-fns-tz** – Date manipulation and timezone handling
+
+### Deployment
+- **Vercel** – Zero-config deployment
+- **Docker** – Self-hosted via Docker Compose
 
 ## Project Structure
 
 ```
-├── app/                    # Next.js App Router pages
-│   ├── (app)/             # Main application pages
-│   │   ├── page.tsx       # Dashboard
-│   │   ├── projects/      # Project management pages
-│   │   ├── tasks/         # Task listing page
-│   │   ├── kanban/        # Kanban board page
-│   │   └── gantt/         # Gantt chart page
-│   ├── api/               # API routes
-│   └── login/             # Authentication page
-├── components/            # React components
-│   ├── ui/                # shadcn/ui base components
-│   ├── Header.tsx         # Top navigation bar
-│   ├── Sidebar.tsx        # Side navigation menu
-│   ├── TaskCard.tsx       # Task display component
-│   ├── TaskListSection.tsx # Task list container
+├── app/
+│   ├── (app)/                  # Main application pages
+│   │   ├── page.tsx           # Dashboard
+│   │   ├── projects/          # Project detail pages
+│   │   ├── tasks/            # Task listing page
+│   │   ├── kanban/           # Kanban board page
+│   │   └── gantt/            # Gantt chart page
+│   ├── api/                   # API routes
+│   │   ├── auth/             # Login, logout, register, check-username
+│   │   ├── projects/         # Project CRUD + copy
+│   │   ├── tasks/            # Task CRUD + duplicate
+│   │   ├── users/             # User list
+│   │   ├── logs/              # Operation logs
+│   │   └── messages/          # Message board
+│   └── login/                # Login & register pages
+├── components/
+│   ├── ui/                   # shadcn/ui base components
+│   ├── Header.tsx            # Top navigation bar
+│   ├── Sidebar.tsx           # Side navigation menu
+│   ├── TaskCard.tsx          # Task card component
+│   ├── TaskListSection.tsx   # Task list container
+│   ├── KanbanBoard.tsx       # Kanban board
+│   ├── GanttChart.tsx        # Gantt chart
+│   ├── LogViewer.tsx         # Operation log viewer
+│   ├── UserProfileDialog.tsx # User profile dialog
+│   ├── UserListDialog.tsx    # User list dialog
+│   ├── SettingsDialog.tsx    # Settings dialog
+│   ├── DeclarationDialog.tsx # About dialog
+│   ├── MessageBoardDialog.tsx # Message board dialog
 │   └── ...
-├── lib/                   # Utilities and helpers
-│   ├── prisma.ts          # Prisma client
-│   └── utils.ts           # Utility functions
-├── prisma/                # Database schema and migrations
-│   └── schema.prisma      # Prisma schema definition
-└── public/                # Static assets
+├── lib/
+│   ├── prisma.ts             # Prisma client
+│   ├── utils.ts              # Utility functions
+│   ├── date-utils.ts         # Date calculation utilities
+│   └── i18n.ts               # Internationalization labels
+└── prisma/
+    └── schema.prisma         # Database schema
 ```
 
-## Setup Instructions
+## Setup
 
 ### Prerequisites
-- Node.js 18+ installed
-- npm or yarn package manager
-- PostgreSQL / MySQL / SQLite database (or use SQLite for local dev)
+- Node.js 18+
+- PostgreSQL (or SQLite for local dev)
 
 ### Installation
 
 ```bash
 # Clone the repository
-git clone https://github.com/kangpingo/pmtools1.git
-cd pmtools1
+git clone https://github.com/kangpingo/pmtool_se1.git
+cd pmtool_se1
 
 # Install dependencies
 npm install
 
-# Set up environment variables
-# Create .env file with your database URL:
-# DATABASE_URL="file:./dev.db"  # for SQLite
-# or
-# DATABASE_URL="postgresql://user:password@localhost:5432/pmtools"
+# Set up environment
+cp .env.example .env  # or create .env with DATABASE_URL
 
-# Generate Prisma client
+# Generate Prisma client & push schema
 npm run db:generate
-
-# Push schema to database
 npm run db:push
 
-# (Optional) Seed database with sample data
+# Seed with sample data (optional)
 npm run db:seed
 
 # Start development server
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Open [http://localhost:3000](http://localhost:3000).
 
-### Production Build
+### Default Login
+- Account: `admin`
+- Password: `admin@123`
 
+## Deployment
+
+### Vercel (Recommended)
 ```bash
-npm run build
-npm start
+npm i -g vercel
+vercel login
+vercel --prod
 ```
+Set `DATABASE_URL` in Vercel Dashboard → Settings → Environment Variables.
 
-## Screenshots
+### Docker (Self-hosted)
+```bash
+docker-compose up -d
+```
+Full documentation: [DEPLOY.md](DEPLOY.md)
 
-*Dashboard View*
-![Dashboard](screenshots/dashboard.png)
+## Version History
 
-*Kanban Board*
-![Kanban](screenshots/kanban.png)
+### v1.0.0 (2026-04-17)
+- User management: registration, display name, user list
+- Bidirectional date-duration sync in task/project dialogs
+- Internationalized operation logs
+- Fixed log viewer with scrollable content
+- Simplified user profile dialog
+- Added About dialog and Message Board shortcut
+- Docker + Vercel deployment support
 
-*Gantt Chart*
-![Gantt](screenshots/gantt.png)
+### v0.1.0 (2026-04-16)
+- Initial release
+- Project & task CRUD
+- Kanban board
+- Gantt chart
+- Dark/light theme
+- Chinese/English i18n
 
 ## License
 
-MIT License – see LICENSE file for details.
+MIT License
