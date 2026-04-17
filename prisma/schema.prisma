@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id             String    @id @default(cuid())
+  name           String    // 项目简称
+  shortName      String?   // 项目简称（与name相同）
+  fullName       String?   // 项目全称
+  plannedStartDate DateTime // 计划开始日期
+  duration       Int
+  description    String?
+  owner          String?
+  link           String?
+  image          String?
+  completionTime DateTime?
+  progress       Int       @default(0)  // 项目总进度（0-100），基于所有任务进度的平均值
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  tasks          Task[]
+}
+
+model Task {
+  id               String    @id @default(cuid())
+  name             String
+  plannedStartDate DateTime  // 计划开始日期
+  plannedEndDate   DateTime  // 计划完成日期
+  actualFinishDate DateTime? // 实际完成日期
+  includeWeekend   Boolean   @default(false)
+  duration         Int       @default(3)
+  keyPoints        String?
+  status           String    @default("TODO")
+  progress         Int       @default(0)
+  favorite         Boolean   @default(false)
+  projectId        String
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model LoginLog {
+  id        String   @id @default(cuid())
+  username  String
+  status    String   // SUCCESS, FAILED
+  ip        String?
+  userAgent String?
+  message   String?
+  createdAt DateTime @default(now())
+}
+
+model SystemLog {
+  id        String   @id @default(cuid())
+
+  level     String   // INFO, WARNING, ERROR
+  module    String   // 模块名称
+  action    String   // 操作类型
+  message   String   // 日志消息
+  details   String?  // 详细信息（JSON）
+  userId    String?  //操作用户
+  userName  String?
+  ip        String?
+  createdAt DateTime @default(now())
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  content   String   // 留言内容
+  author    String   // 作者名称
+  likes     Int      @default(0)  // 点赞数
+  likedBy   String[] @default([]) // 点赞用户列表
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  replies   Reply[]
+}
+
+model Reply {
+  id        String   @id @default(cuid())
+  content   String   // 回复内容
+  author    String   // 回复者名称
+  likes     Int      @default(0)  // 点赞数
+  likedBy   String[] @default([]) // 点赞用户列表
+  messageId String
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  name      String?
+  email     String?  // 邮箱（非必选）
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
