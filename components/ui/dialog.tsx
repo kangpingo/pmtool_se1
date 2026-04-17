@@ -22,6 +22,8 @@ export function DialogOverlay({ className, ...props }: DialogPrimitive.DialogOve
 }
 
 export function DialogContent({ className, children, ...props }: DialogPrimitive.DialogContentProps) {
+  // Filter out open/onOpenChange - they should only be on Dialog root, not Content
+  const { open: _open, onOpenChange: _onOpenChange, ...rest } = props as DialogPrimitive.DialogContentProps & { open?: unknown; onOpenChange?: unknown }
   return (
     <DialogPortal>
       <DialogOverlay />
@@ -34,7 +36,7 @@ export function DialogContent({ className, children, ...props }: DialogPrimitive
         style={{
           animation: 'dialog-scale-in 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) forwards',
         }}
-        {...props}
+        {...rest}
       >
         {children}
         <DialogClose className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
