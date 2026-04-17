@@ -1,6 +1,7 @@
 'use client'
 import { useState } from 'react'
 import { format, addDays } from 'date-fns'
+import { calcDaysBetween } from '@/lib/date-utils'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -107,6 +108,12 @@ export default function CreateProjectDialog() {
   function handleStartDateChange(start: string) {
     setForm(f => ({ ...f, startDate: start, completionTime: computeCompletion(start, f.duration) }))
     if (errors.startDate) setErrors(e => ({ ...e, startDate: undefined }))
+  }
+
+  function handleCompletionDateChange(completion: string) {
+    const newDur = calcDaysBetween(new Date(form.startDate), new Date(completion))
+    setForm(f => ({ ...f, completionTime: completion, duration: String(newDur) }))
+    if (errors.duration) setErrors(e => ({ ...e, duration: undefined }))
   }
 
   function resetForm() {
@@ -261,7 +268,7 @@ export default function CreateProjectDialog() {
                 {t.completionLabel}
               </Label>
               <Input type="date" value={form.completionTime}
-                onChange={e => setForm(f => ({ ...f, completionTime: e.target.value }))}
+                onChange={e => handleCompletionDateChange(e.target.value)}
                 placeholder={t.completionPlaceholder}
                 className="border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100 dark:text-gray-100 transition-all"
               />

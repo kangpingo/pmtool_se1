@@ -91,10 +91,11 @@ model Reply {
 }
 
 model User {
-  id        String   @id @default(cuid())
-  username  String   @unique
-  name      String?
-  email     String?  // 邮箱（非必选）
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String   @default("")
+  name         String?
+  email        String?  // 邮箱（非必选）
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }

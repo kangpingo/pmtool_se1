@@ -1,13 +1,14 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
-import { Globe, LogOut, Settings, FileText, MessageSquare, X, Database, Heart, Search, Folder, Sun, Moon } from 'lucide-react'
+import { Globe, LogOut, Settings, FileText, MessageSquare, X, Database, Heart, Search, Folder, Sun, Moon, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { useApp } from './AppProvider'
 import UserProfileDialog from './UserProfileDialog'
 import SettingsDialog from './SettingsDialog'
 import LogViewer from './LogViewer'
+import UserListDialog from './UserListDialog'
 import MessageBoardDialog from './MessageBoardDialog'
 import DeclarationDialog from './DeclarationDialog'
 import DataManagementDialog from './DataManagementDialog'
@@ -17,6 +18,7 @@ const labels = {
     logout: '退出登录',
     settings: '设置',
     viewLogs: '查看日志',
+    userList: '用户列表',
     setProgress: '进度百分比',
     dataManagement: '数据管理',
     logs: '日志',
@@ -26,6 +28,7 @@ const labels = {
     logout: 'Logout',
     settings: 'Settings',
     viewLogs: 'View Logs',
+    userList: 'User List',
     setProgress: 'Progress %',
     dataManagement: 'Data Management',
     logs: 'Logs',
@@ -45,10 +48,27 @@ export default function Header() {
   const [showSettingsDropdown, setShowSettingsDropdown] = useState(false)
   const [showDataManagement, setShowDataManagement] = useState(false)
   const [showDeclaration, setShowDeclaration] = useState(false)
+  const [showUserList, setShowUserList] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [searchResults, setSearchResults] = useState<{ id: string; name: string; fullName: string | null }[]>([])
   const [showSearch, setShowSearch] = useState(false)
+  const [displayName, setDisplayName] = useState('User')
   const searchRef = useRef<HTMLDivElement>(null)
+
+  // Load username from cookies
+  useEffect(() => {
+    const cookies = document.cookie.split(';')
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=')
+      if (name === 'displayName') {
+        setDisplayName(decodeURIComponent(value))
+        return
+      }
+      if (name === 'username') {
+        setDisplayName(decodeURIComponent(value))
+      }
+    }
+  }, [])
 
   useEffect(() => {
     if (searchQuery.length < 1) {
@@ -95,7 +115,7 @@ export default function Header() {
       {/* Search - centered */}
       <div className="flex-1 flex justify-center" ref={searchRef}>
         <div className="relative">
-          <div className="flex items-center gap-2 bg-white/80 dark:bg-gray-700 rounded-xl px-3 py-2 border border-gray-200/50 dark:border-gray-600 shadow-sm focus-within:shadow-md focus-within:border-blue-400 transition-all w-64 md:w-80 backdrop-blur-sm">
+          <div className="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 rounded-xl px-3 py-2 border border-gray-200 dark:border-gray-600 shadow-sm focus-within:shadow-md focus-within:border-blue-400 transition-all w-64 md:w-80">
             <Search className="h-4 w-4 text-gray-400 shrink-0" />
             <input
               type="text"
@@ -103,7 +123,7 @@ export default function Header() {
               onChange={e => { setSearchQuery(e.target.value); setShowSearch(true) }}
               onFocus={() => setShowSearch(true)}
               placeholder={lang === 'zh' ? '搜索项目...' : 'Search...'}
-              className="flex-1 text-sm bg-transparent outline-none text-gray-700 dark:text-gray-200 placeholder-gray-400 shrink-0"
+              className="flex-1 text-sm bg-transparent outline-none text-gray-800 dark:text-gray-200 placeholder-gray-400 shrink-0"
             />
             {searchQuery && (
               <button onClick={() => { setSearchQuery(''); setSearchResults([]) }} className="text-gray-400 hover:text-gray-600 shrink-0">
@@ -206,6 +226,13 @@ export default function Header() {
                   {t.dataManagement}
                 </button>
                 <button
+                  onClick={() => { setShowUserList(true); setShowSettingsDropdown(false) }}
+                  className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200"
+                >
+                  <Users className="h-4 w-4" />
+                  {t.userList}
+                </button>
+                <button
                   onClick={() => { setShowLogs(true); setShowSettingsDropdown(false) }}
                   className="w-full px-3 py-2 text-left text-sm hover:bg-gray-50 dark:hover:bg-gray-700 flex items-center gap-2 text-gray-700 dark:text-gray-200"
                 >
@@ -253,7 +280,7 @@ export default function Header() {
         <div className="flex items-center gap-0 pl-0.5 border-l border-gray-200 dark:border-gray-600">
           <button onClick={() => setShowUserProfile(true)} className="flex items-center gap-2 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg px-2 py-1 transition-colors group">
             <img src="/avatar.svg" alt="Avatar" className="w-6 h-6 rounded-full" />
-            <span className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden md:inline">Calen</span>
+            <span className="text-sm font-bold text-gray-700 dark:text-gray-200 group-hover:text-blue-600 dark:group-hover:text-blue-400 hidden md:inline">{displayName}</span>
           </button>
           <Button variant="ghost" size="sm" className="h-9 w-9 p-0 text-gray-400 hover:text-red-500 dark:text-gray-400 dark:hover:text-red-400" onClick={handleLogout}>
             <span title={t.logout}>
@@ -268,6 +295,8 @@ export default function Header() {
       {showLogs && <LogViewer open={showLogs} onClose={() => setShowLogs(false)} />}
       {showMessageBoard && <MessageBoardDialog open={showMessageBoard} onClose={() => setShowMessageBoard(false)} />}
       {showDeclaration && <DeclarationDialog open={showDeclaration} onClose={() => setShowDeclaration(false)} />}
+      {showDataManagement && <DataManagementDialog open={showDataManagement} onClose={() => setShowDataManagement(false)} />}
+      {showUserList && <UserListDialog open={showUserList} onClose={() => setShowUserList(false)} />}
     </header>
   )
 }

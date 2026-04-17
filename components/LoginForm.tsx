@@ -1,12 +1,13 @@
 'use client'
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
-import { MessageCircle, Mail } from 'lucide-react'
+import { MessageCircle, Mail, UserPlus } from 'lucide-react'
 
 type Language = 'zh' | 'en'
 
@@ -19,10 +20,9 @@ const labels = {
     loggingIn: '登录中...',
     error: '用户名或密码错误',
     forgotPassword: '忘记密码',
-    contactAdmin: '联系管理员',
-    contactMessage: '如有登录问题，请联系管理员：',
-    wechat: 'Wechat',
-    email: 'E-mail',
+    contactAdmin: '如有登录问题，请联系管理员',
+    wechat: '微信',
+    email: '邮箱',
   },
   en: {
     title: 'Login',
@@ -32,10 +32,9 @@ const labels = {
     loggingIn: 'Logging in...',
     error: 'Invalid username or password',
     forgotPassword: 'Forgot Password',
-    contactAdmin: 'Contact Admin',
-    contactMessage: 'Please contact administrator:',
+    contactAdmin: 'Please contact administrator',
     wechat: 'Wechat',
-    email: 'E-mail',
+    email: 'Email',
   },
 }
 
@@ -79,27 +78,34 @@ export default function LoginForm() {
   }
 
   return (
-    <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-white/10">
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="username" className="text-gray-300 text-sm">{t.username}</Label>
+    <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 border border-slate-200 dark:border-slate-700">
+      <div className="text-center mb-8">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{t.title}</h2>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          {lang === 'zh' ? '项目管理工具' : 'Project Management Tool'}
+        </p>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div className="space-y-2">
+          <Label htmlFor="username" className="text-slate-700 dark:text-slate-300 text-sm font-medium">{t.username}</Label>
           <Input
             id="username"
             value={username}
             onChange={e => setUsername(e.target.value)}
-            className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+            className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white"
             placeholder="admin"
             autoComplete="username"
           />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="password" className="text-gray-300 text-sm">{t.password}</Label>
+        <div className="space-y-2">
+          <Label htmlFor="password" className="text-slate-700 dark:text-slate-300 text-sm font-medium">{t.password}</Label>
           <Input
             id="password"
             type="password"
             value={password}
             onChange={e => setPassword(e.target.value)}
-            className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+            className="bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-600 text-slate-800 dark:text-white"
             placeholder="••••••••"
             autoComplete="current-password"
           />
@@ -107,64 +113,68 @@ export default function LoginForm() {
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white"
+          className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2.5"
         >
           {loading ? t.loggingIn : t.login}
         </Button>
       </form>
 
-      <div className="mt-4 flex items-center justify-between">
-        <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
-          <DialogTrigger asChild>
-            <button className="text-gray-400 text-sm hover:text-white transition-colors">
-              {t.forgotPassword}
-            </button>
-          </DialogTrigger>
-          <DialogContent className="max-w-sm">
-            <DialogHeader>
-              <div className="flex items-start gap-3 px-1 pb-3 border-b border-gray-100">
-                <div className="text-5xl leading-none select-none" style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-                  🐶
-                </div>
-                <div className="pt-1" style={{ marginTop: '5px' }}>
-                  <DialogTitle className="text-lg font-bold text-gray-900">
-                    Forgot Password
+      <div className="mt-6 space-y-4">
+        <div className="flex items-center justify-between text-sm">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/login/register"
+              className="text-blue-500 hover:text-blue-600 font-medium transition-colors"
+            >
+              {lang === 'zh' ? '注册账户' : 'Create Account'}
+            </Link>
+            <span className="text-slate-300 dark:text-slate-600">|</span>
+            <Dialog open={forgotOpen} onOpenChange={setForgotOpen}>
+              <DialogTrigger asChild>
+                <button className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-300 transition-colors">
+                  {t.forgotPassword}
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-sm">
+                <DialogHeader>
+                  <DialogTitle className="text-lg font-bold text-slate-800 dark:text-white">
+                    {t.forgotPassword}
                   </DialogTitle>
+                </DialogHeader>
+                <div className="py-4 space-y-4">
+                  <p className="text-sm text-slate-600 dark:text-slate-400">{t.contactAdmin}</p>
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 text-sm">
+                      <MessageCircle className="h-4 w-4 text-green-500" />
+                      <span className="text-slate-500">{t.wechat}:</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">kangpingchn</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm">
+                      <Mail className="h-4 w-4 text-blue-500" />
+                      <span className="text-slate-500">{t.email}:</span>
+                      <span className="font-medium text-slate-700 dark:text-slate-300">kangpingchn@hotmail.com</span>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </DialogHeader>
-            <div className="py-4 space-y-3" style={{ marginTop: '-10px', marginRight: '10px' }}>
-              <p className="text-sm text-gray-600">{t.contactMessage}</p>
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 text-sm">
-                  <MessageCircle className="h-4 w-4 text-green-500" />
-                  <span className="text-gray-500">{t.wechat}:</span>
-                  <span className="font-medium text-gray-800">kangpingchn</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm">
-                  <Mail className="h-4 w-4 text-blue-500" />
-                  <span className="text-gray-500">{t.email}:</span>
-                  <span className="font-medium text-gray-800">kangpingchn@hotmail.com</span>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
 
-        {/* Language toggle */}
-        <div className="flex gap-1">
-          <button
-            onClick={() => setLang('zh')}
-            className={`px-2 py-1 text-xs rounded ${lang === 'zh' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'}`}
-          >
-            中文
-          </button>
-          <button
-            onClick={() => setLang('en')}
-            className={`px-2 py-1 text-xs rounded ${lang === 'en' ? 'bg-blue-500 text-white' : 'text-gray-400 hover:text-white'}`}
-          >
-            EN
-          </button>
+          {/* Language toggle */}
+          <div className="flex gap-1 bg-slate-100 dark:bg-slate-700 rounded-lg p-1">
+            <button
+              onClick={() => setLang('zh')}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${lang === 'zh' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+            >
+              中文
+            </button>
+            <button
+              onClick={() => setLang('en')}
+              className={`px-3 py-1 text-xs rounded-md transition-all ${lang === 'en' ? 'bg-white dark:bg-slate-600 text-slate-800 dark:text-white shadow-sm' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400'}`}
+            >
+              EN
+            </button>
+          </div>
         </div>
       </div>
     </div>

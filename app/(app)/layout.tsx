@@ -3,9 +3,10 @@ import '../globals.css'
 import { Toaster } from 'sonner'
 import Sidebar from '@/components/Sidebar'
 import Header from '@/components/Header'
+
 export const metadata: Metadata = {
-  title: '东方渡项目管理平台',
-  description: 'StoryEAST Project Management System',
+  title: 'PMTool SE1',
+  description: 'PMTool SE1 - Project Management Tool',
   manifest: '/manifest.json',
 }
 

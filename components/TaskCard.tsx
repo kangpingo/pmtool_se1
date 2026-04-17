@@ -2,10 +2,10 @@
 import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { format } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { zhCN, enUS } from 'date-fns/locale'
 import { toast } from 'sonner'
-import { isTaskOverdue, isTaskDueSoon, isTaskDueToday, isTaskDueTomorrow } from '@/lib/date-utils'
+import { isTaskOverdue, isTaskDueSoon, isTaskDueToday, isTaskDueTomorrow, calcDaysBetween } from '@/lib/date-utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
@@ -85,6 +85,11 @@ const cardLabels = {
     duplicateTooltip: '复制',
     favoriteTitle: '收藏',
     unfavoriteTitle: '取消收藏',
+    actual: '实际',
+    finish: '完成',
+    duration: '工期',
+    days: '天',
+    progress: '进度',
   },
   en: {
     overdue: 'Overdue',
@@ -111,6 +116,11 @@ const cardLabels = {
     duplicateTooltip: 'Duplicate',
     favoriteTitle: 'Favorite',
     unfavoriteTitle: 'Unfavorite',
+    actual: 'Actual',
+    finish: 'Finish',
+    duration: 'Dur',
+    days: 'Days',
+    progress: 'Progress',
   },
 }
 
@@ -351,7 +361,7 @@ export default function TaskCard({ task, compact = false, showKeyPoints = true, 
           </span>
           {showProject && task.project && <Link href={`/projects/${task.project.id}`} className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 shrink-0 flex nowrap items-center gap-0.5"><span className="whitespace-nowrap flex items-center gap-0.5"><Folder className="h-3 w-3" />{task.project.name}</span></Link>}
           {/* Action buttons pushed to right with ml-auto */}
-          <div className="flex items-center gap-1 shrink-0 ml-auto mt-1">
+          <div className="flex items-center gap-1 shrink-0 ml-auto">
             {(task.status !== 'DONE' || currentProgress === 100) && (
               <div className="h-3 w-[160px] bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden shrink-0">
                 <div
@@ -439,15 +449,13 @@ export default function TaskCard({ task, compact = false, showKeyPoints = true, 
             {dueTomorrow && <span className="text-xs bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400 px-1.5 py-0.5 rounded shrink-0">{t.dueTomorrow}</span>}
           </div>
           <div className="flex items-center gap-3 mt-1.5 text-xs text-gray-400 dark:text-gray-500 font-normal">
-            <span>{task.actualFinishDate ? `Actual: ${format(new Date(task.actualFinishDate), 'yyyy/MM/dd')}` : `Finish: ${format(new Date(task.endDate), 'yyyy/MM/dd')}`}</span>
+            <span>{task.actualFinishDate ? `${t.actual}: ${format(new Date(task.actualFinishDate), 'yyyy/MM/dd')}` : `${t.finish}: ${format(new Date(task.endDate), 'yyyy/MM/dd')}`}</span>
             <span>|</span>
-            <span>Dur: {task.duration}Days</span>
+            <span>{t.duration}: {task.duration}{t.days}</span>
             <span>|</span>
-            <div className="w-28 shrink-0">
-              <span className="text-gray-700 dark:text-gray-200">Progress: {formatProgress(currentProgress)}</span>
-            </div>
+            <span className="text-gray-700 dark:text-gray-200">{t.progress}: {formatProgress(currentProgress)}</span>
             {(task.status !== 'DONE' || currentProgress === 100) && (
-              <div className="flex-1 h-2.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
+              <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                 <div
                   className="h-full rounded-full transition-all"
                   style={{
@@ -502,14 +510,18 @@ export default function TaskCard({ task, compact = false, showKeyPoints = true, 
             </span>
           </Button>
           <InlineEditTask task={task} onDone={() => {}} />
-          <div className="h-8 w-8 flex items-center justify-center rounded-lg bg-gray-200 dark:bg-gray-700">
-            <input
-              type="checkbox"
-              checked={selected}
-              onChange={() => onToggleSelect?.(task.id)}
-              className="w-4 h-4 rounded border-gray-300 text-gray-700 dark:text-gray-200 focus:ring-blue-500 cursor-pointer"
-            />
-          </div>
+          <button
+            onClick={() => onToggleSelect?.(task.id)}
+            className={`h-8 w-8 flex items-center justify-center rounded-lg transition-all duration-200 ${
+              selected
+                ? 'bg-blue-500 text-white shadow-md shadow-blue-200 dark:shadow-blue-900/50'
+                : 'bg-gray-200 dark:bg-gray-700 text-gray-400 hover:text-blue-500 hover:bg-blue-100 dark:hover:bg-blue-900/30'
+            }`}
+            title={selected ? (lang === 'zh' ? '取消选择' : 'Deselect') : (lang === 'zh' ? '选择任务' : 'Select task')}
+          >
+            {selected && <Check className="h-4 w-4" />}
+            {!selected && <div className="h-4 w-4 rounded border-2 border-gray-400 dark:border-gray-500" />}
+          </button>
           {task.status === 'DONE' && currentProgress !== 100 ? (
             <Button size="sm" variant="ghost" className="h-8 px-2 text-gray-400 hover:text-yellow-600 dark:hover:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30" onClick={reopenTask}>
               <span title={t.reopenTitle}>
@@ -612,6 +624,34 @@ function InlineEditTask({ task, onDone, compact = false }: { task: Task; onDone:
     })
     setErrors({})
     setOpen(true)
+  }
+
+  function calcEndDateInline(start: string, dur: number): string {
+    if (!start || !dur) return start
+    return format(addDays(new Date(start), dur - 1), 'yyyy-MM-dd')
+  }
+
+  function calcDurationInline(start: string, end: string): number {
+    if (!start || !end) return 1
+    return calcDaysBetween(new Date(start), new Date(end))
+  }
+
+  function handleStartDateChange(start: string) {
+    const dur = Number(form.duration) || 1
+    setForm(f => ({ ...f, startDate: start, endDate: calcEndDateInline(start, dur) }))
+    if (errors.startDate) setErrors(er => ({ ...er, startDate: undefined }))
+  }
+
+  function handleDurationChange(dur: string) {
+    const duration = Number(dur) || 1
+    setForm(f => ({ ...f, duration: dur, endDate: calcEndDateInline(f.startDate, duration) }))
+    if (errors.duration) setErrors(er => ({ ...er, duration: undefined }))
+  }
+
+  function handleEndDateChange(end: string) {
+    const newDur = calcDurationInline(form.startDate, end)
+    setForm(f => ({ ...f, endDate: end, duration: String(newDur) }))
+    if (errors.endDate) setErrors(er => ({ ...er, endDate: undefined }))
   }
 
   function validate(): boolean {
@@ -720,7 +760,7 @@ function InlineEditTask({ task, onDone, compact = false }: { task: Task; onDone:
                 <span className="text-red-500 text-xs">*</span>
               </label>
               <Input type="date" value={form.startDate}
-                onChange={e => { setForm(f => ({ ...f, startDate: e.target.value })); if (errors.startDate) setErrors(er => ({ ...er, startDate: undefined })) }}
+                onChange={e => handleStartDateChange(e.target.value)}
                 className={`${errors.startDate ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all`}
               />
               {errors.startDate && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.startDate}</p>}
@@ -732,7 +772,7 @@ function InlineEditTask({ task, onDone, compact = false }: { task: Task; onDone:
                 <span className="text-red-500 text-xs">*</span>
               </label>
               <Input type="date" value={form.endDate}
-                onChange={e => { setForm(f => ({ ...f, endDate: e.target.value })); if (errors.endDate) setErrors(er => ({ ...er, endDate: undefined })) }}
+                onChange={e => handleEndDateChange(e.target.value)}
                 className={`${errors.endDate ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all`}
               />
               {errors.endDate && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.endDate}</p>}
@@ -746,7 +786,7 @@ function InlineEditTask({ task, onDone, compact = false }: { task: Task; onDone:
                 <span className="text-red-500 text-xs">*</span>
               </label>
               <Input type="number" min="1" value={form.duration}
-                onChange={e => { setForm(f => ({ ...f, duration: e.target.value })); if (errors.duration) setErrors(er => ({ ...er, duration: undefined })) }}
+                onChange={e => handleDurationChange(e.target.value)}
                 className={`${errors.duration ? 'border-red-300 bg-red-50 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all`}
               />
               {errors.duration && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.duration}</p>}

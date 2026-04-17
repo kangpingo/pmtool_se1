@@ -17,8 +17,8 @@ export const translations = {
     light: '浅色',
 
     // System name
-    systemName: '东方渡项目管理平台',
-    systemNameEn: 'StoryEAST Project Management System',
+    systemName: 'PMTool SE1',
+    systemNameEn: 'PMTool SE1',
 
     // Header
     logout: '退出登录',
@@ -163,8 +163,8 @@ export const translations = {
     light: 'Light',
 
     // System name
-    systemName: '东方渡项目管理平台',
-    systemNameEn: 'StoryEAST Project Management System',
+    systemName: 'PMTool SE1',
+    systemNameEn: 'PMTool SE1',
 
     // Header
     logout: 'Logout',

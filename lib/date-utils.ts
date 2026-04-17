@@ -77,3 +77,28 @@ export function formatDate(date: Date | string): string {
 export function formatDateCN(date: Date | string): string {
   return format(new Date(date), 'M月d日')
 }
+
+/**
+ * 计算两个日期之间的天数差（包含首尾）
+ * @param startDate 开始日期
+ * @param endDate 结束日期
+ */
+export function calcDaysBetween(startDate: Date, endDate: Date): number {
+  return Math.abs(differenceInCalendarDays(endDate, startDate)) + 1
+}
+
+/**
+ * 根据开始日期和结束日期计算工期（不含周末）
+ * @param startDate 开始日期
+ * @param endDate 结束日期
+ */
+export function calcWorkDaysBetween(startDate: Date, endDate: Date): number {
+  let count = 0
+  let current = new Date(startDate)
+  const end = new Date(endDate)
+  while (!isAfter(current, end)) {
+    if (!isWeekend(current)) count++
+    current = addDays(current, 1)
+  }
+  return count
+}

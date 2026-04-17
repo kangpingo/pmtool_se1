@@ -172,7 +172,7 @@ export default function Sidebar() {
           collapsed ? 'opacity-0 pointer-events-none' : 'opacity-100'
         )}
       >
-        <p className="text-gray-400 text-xs">v1.2 @2026 StoryEAST PMS</p>
+        <p className="text-gray-400 text-xs">@2026 pmtool_se1</p>
       </div>
     </div>
   )

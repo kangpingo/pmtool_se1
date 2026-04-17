@@ -1,6 +1,6 @@
 'use client'
 import { useState } from 'react'
-import { format } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -10,7 +10,7 @@ import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Pencil, AlertCircle } from 'lucide-react'
-import { isTaskOverdue, isTaskDueToday, isTaskDueTomorrow } from '@/lib/date-utils'
+import { isTaskOverdue, isTaskDueToday, isTaskDueTomorrow, calcDaysBetween } from '@/lib/date-utils'
 
 interface Task {
   id: string
@@ -25,24 +25,44 @@ interface Task {
   favorite: boolean
 }
 
+// 根据开始日期和工期计算结束日期
+function calcEndDate(start: string, dur: number): string {
+  if (!start || !dur) return ''
+  return format(addDays(new Date(start), dur - 1), 'yyyy-MM-dd')
+}
+
+// 根据开始和结束日期计算工期
+function calcDurationFromDates(start: string, end: string): number {
+  if (!start || !end) return 1
+  return calcDaysBetween(new Date(start), new Date(end))
+}
+
 export default function EditTaskDialog({ task, onUpdated }: { task: Task; onUpdated: () => void }) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [form, setForm] = useState({
-    name: task.name,
-    startDate: format(new Date(task.startDate), 'yyyy-MM-dd'),
-    duration: String(task.duration),
-    includeWeekend: task.includeWeekend,
-    keyPoints: task.keyPoints ?? '',
-    status: task.status,
-    actualFinishDate: task.actualFinishDate ? format(new Date(task.actualFinishDate), 'yyyy-MM-dd') : '',
+  const [form, setForm] = useState(() => {
+    const start = format(new Date(task.startDate), 'yyyy-MM-dd')
+    const end = format(new Date(task.endDate), 'yyyy-MM-dd')
+    return {
+      name: task.name,
+      startDate: start,
+      endDate: end,
+      duration: String(task.duration),
+      includeWeekend: task.includeWeekend,
+      keyPoints: task.keyPoints ?? '',
+      status: task.status,
+      actualFinishDate: task.actualFinishDate ? format(new Date(task.actualFinishDate), 'yyyy-MM-dd') : '',
+    }
   })
 
   function openDialog() {
+    const start = format(new Date(task.startDate), 'yyyy-MM-dd')
+    const end = format(new Date(task.endDate), 'yyyy-MM-dd')
     setForm({
       name: task.name,
-      startDate: format(new Date(task.startDate), 'yyyy-MM-dd'),
+      startDate: start,
+      endDate: end,
       duration: String(task.duration),
       includeWeekend: task.includeWeekend,
       keyPoints: task.keyPoints ?? '',
@@ -51,6 +71,24 @@ export default function EditTaskDialog({ task, onUpdated }: { task: Task; onUpda
     })
     setErrors({})
     setOpen(true)
+  }
+
+  function handleStartDateChange(start: string) {
+    const dur = Number(form.duration) || 1
+    setForm(f => ({ ...f, startDate: start, endDate: calcEndDate(start, dur) }))
+    if (errors.startDate) setErrors(e => ({ ...e, startDate: '' }))
+  }
+
+  function handleDurationChange(dur: string) {
+    const duration = Number(dur) || 1
+    setForm(f => ({ ...f, duration: dur, endDate: calcEndDate(f.startDate, duration) }))
+    if (errors.duration) setErrors(e => ({ ...e, duration: '' }))
+  }
+
+  function handleEndDateChange(end: string) {
+    const newDur = calcDurationFromDates(form.startDate, end)
+    setForm(f => ({ ...f, endDate: end, duration: String(newDur) }))
+    if (errors.duration) setErrors(e => ({ ...e, duration: '' }))
   }
 
   function validateForm(): boolean {
@@ -144,18 +182,19 @@ export default function EditTaskDialog({ task, onUpdated }: { task: Task; onUpda
             <div className="space-y-1.5">
               <Label>计划开始日期</Label>
               <Input type="date" value={form.startDate}
-                onChange={e => setForm(f => ({ ...f, startDate: e.target.value }))} />
+                onChange={e => handleStartDateChange(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>工期（天）</Label>
               <Input type="number" min="1" value={form.duration}
-                onChange={e => setForm(f => ({ ...f, duration: e.target.value }))} />
+                onChange={e => handleDurationChange(e.target.value)} />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
               <Label>计划完成日期</Label>
-              <Input type="date" value={task.endDate ? format(new Date(task.endDate), 'yyyy-MM-dd') : ''} disabled />
+              <Input type="date" value={form.endDate}
+                onChange={e => handleEndDateChange(e.target.value)} />
             </div>
             <div className="space-y-1.5">
               <Label>实际完成日期</Label>

@@ -108,7 +108,7 @@ export default async function HomePage() {
       {/* 项目列表 */}
       <div>
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t.myProjects}{lang === 'zh' ? '（' : '('}{projects.length}{lang === 'zh' ? '）' : ')'}</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{t.myProjects}</h2>
           <Link href="/projects">
             <Button variant="ghost" size="sm" className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20">
               {t.allProjects} <ArrowRight className="h-4 w-4 ml-1" />
@@ -169,8 +169,6 @@ export default async function HomePage() {
                         ) : <div />}
                         <div className="flex items-center gap-3 text-xs text-gray-400 dark:text-gray-500">
                           <span>{t.planFinish}: {project.completionTime ? format(new Date(project.completionTime), 'yyyy/MM/dd') : '-'}</span>
-                          <span>·</span>
-                          <span>Progress: {pct}%</span>
                         </div>
                       </div>
 

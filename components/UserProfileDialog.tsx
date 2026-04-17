@@ -1,12 +1,12 @@
 'use client'
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useApp } from './AppProvider'
-import { User, Upload, Camera, X } from 'lucide-react'
+import { User, X } from 'lucide-react'
 
 const avatarOptions = [
   '/avatar.svg',
@@ -18,38 +18,26 @@ const labels = {
   zh: {
     title: '用户信息',
     accountLabel: '账号',
+    accountHint: '账号不可修改',
     nameLabel: '用户名',
+    nameHint: '显示在页面顶部的名称',
     emailLabel: '邮箱',
-    emailHint: '方便联系时使用（非必填）',
-    sloganLabel: '口号',
-    sloganPlaceholder: '输入你的口号...',
+    emailHint: '方便联系时使用（选填）',
     save: '保存',
     cancel: '取消',
     saveSuccess: '保存成功',
-    avatarLabel: '头像',
-    uploadAvatar: '上传头像',
-    dragHint: '拖放图片到此处上传',
-    orBrowse: '或点击选择图片',
-    removeImage: '移除',
-    sloganRequired: '口号不能超过50个字符',
   },
   en: {
     title: 'User Profile',
     accountLabel: 'Account',
-    nameLabel: 'Username',
+    accountHint: 'Account cannot be changed',
+    nameLabel: 'Display Name',
+    nameHint: 'Shown at the top of the page',
     emailLabel: 'Email',
-    emailHint: 'Used for contact (optional)',
-    sloganLabel: 'Slogan',
-    sloganPlaceholder: 'Enter your slogan...',
+    emailHint: 'For contact purposes (optional)',
     save: 'Save',
     cancel: 'Cancel',
     saveSuccess: 'Saved successfully',
-    avatarLabel: 'Avatar',
-    uploadAvatar: 'Upload Avatar',
-    dragHint: 'Drag & drop image here',
-    orBrowse: 'or click to select',
-    removeImage: 'Remove',
-    sloganRequired: 'Slogan cannot exceed 50 characters',
   },
 }
 
@@ -59,88 +47,53 @@ interface UserProfileDialogProps {
 
 export default function UserProfileDialog({ onClose }: UserProfileDialogProps) {
   const { lang } = useApp()
-  const t = labels[lang]
-  const [accountName] = useState('Administrator')
-  const [userName, setUserName] = useState('Administrator')
+  const t = labels[lang] || labels.zh
+  const [accountName, setAccountName] = useState('')
+  const [displayName, setDisplayName] = useState('')
   const [email, setEmail] = useState('')
-  const [slogan, setSlogan] = useState('')
   const [selectedAvatar, setSelectedAvatar] = useState(avatarOptions[0])
-  const [customAvatarUrl, setCustomAvatarUrl] = useState('')
   const [loading, setLoading] = useState(false)
-  const [isDragging, setIsDragging] = useState(false)
 
-  // Load saved settings on mount
+  // Load settings from cookies and localStorage on mount
   useEffect(() => {
+    // Load account name from cookie (username = account name)
+    const cookies = document.cookie.split(';')
+    for (const cookie of cookies) {
+      const [name, value] = cookie.trim().split('=')
+      if (name === 'username') {
+        const decodedValue = decodeURIComponent(value)
+        setAccountName(decodedValue)
+        // Default displayName to account name if no saved name
+        const savedDisplayName = localStorage.getItem('userDisplayName')
+        setDisplayName(savedDisplayName || decodedValue)
+        break
+      }
+    }
+
+    // Load other settings from localStorage
     const savedAvatar = localStorage.getItem('userAvatar')
-    const savedSlogan = localStorage.getItem('userSlogan')
-    const savedName = localStorage.getItem('userName')
     const savedEmail = localStorage.getItem('userEmail')
     if (savedAvatar) setSelectedAvatar(savedAvatar)
-    if (savedSlogan) setSlogan(savedSlogan)
-    if (savedName) setUserName(savedName)
     if (savedEmail) setEmail(savedEmail)
   }, [])
 
   async function handleSave() {
-    if (slogan.length > 50) {
-      toast.error(t.sloganRequired)
-      return
-    }
     setLoading(true)
     try {
       // Save to localStorage
       localStorage.setItem('userAvatar', selectedAvatar)
-      localStorage.setItem('userSlogan', slogan)
-      localStorage.setItem('userName', userName)
+      localStorage.setItem('userDisplayName', displayName)
       localStorage.setItem('userEmail', email)
+
+      // Also save displayName to cookie so Header can read it
+      document.cookie = `displayName=${encodeURIComponent(displayName)}; path=/; max-age=${60 * 60 * 24 * 365}`
+
       toast.success(t.saveSuccess)
       setTimeout(() => window.location.reload(), 500)
     } catch {
       toast.error('Save failed')
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault()
-    setIsDragging(false)
-    const file = e.dataTransfer.files[0]
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result as string
-        setCustomAvatarUrl(result)
-        setSelectedAvatar(result)
-      }
-      reader.onerror = () => toast.error('Failed to read image')
-      reader.readAsDataURL(file)
-    } else {
-      toast.error(lang === 'zh' ? '请上传图片文件' : 'Please upload an image file')
-    }
-  }, [lang])
-
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (file && file.type.startsWith('image/')) {
-      const reader = new FileReader()
-      reader.onload = (event) => {
-        const result = event.target?.result as string
-        setCustomAvatarUrl(result)
-        setSelectedAvatar(result)
-      }
-      reader.onerror = () => toast.error('Failed to read image')
-      reader.readAsDataURL(file)
     }
   }
 
@@ -163,50 +116,57 @@ export default function UserProfileDialog({ onClose }: UserProfileDialogProps) {
             </DialogTitle>
           </div>
           <div className="flex items-center gap-4">
-            <div className="relative group cursor-pointer" onClick={() => document.getElementById('avatar-input')?.click()}>
-              <div className="w-[80px] h-[80px] rounded-full bg-white border-4 border-white/30 shadow-xl overflow-hidden">
-                {selectedAvatar ? (
-                  <img src={selectedAvatar} alt="Avatar" className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                    <User className="h-10 w-10 text-blue-400" />
-                  </div>
-                )}
-              </div>
-              <div className="absolute inset-0 bg-black/50 rounded-full opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                <Camera className="h-7 w-7 text-white" />
-              </div>
-              <input
-                id="avatar-input"
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={handleFileSelect}
-              />
+            <div className="w-[80px] h-[80px] rounded-full bg-white border-4 border-white/30 shadow-xl overflow-hidden">
+              {selectedAvatar ? (
+                <img src={selectedAvatar} alt="Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                  <User className="h-10 w-10 text-blue-400" />
+                </div>
+              )}
             </div>
             <div className="text-white">
               <div className="text-xl font-bold drop-shadow-sm">
-                {userName || accountName}
+                {displayName || accountName}
               </div>
-              <div className="text-sm text-white/80">{accountName}</div>
+              <div className="text-sm text-white/80">@{accountName}</div>
             </div>
           </div>
         </div>
+
         <div className="p-6 -mt-10 space-y-4 bg-white dark:bg-gray-800 rounded-t-3xl">
+          {/* Account (read-only) */}
+          <div className="space-y-1.5">
+            <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t.accountLabel}
+            </Label>
+            <Input
+              value={accountName}
+              disabled
+              className="h-10 text-sm border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-xl text-gray-500 dark:text-gray-400 cursor-not-allowed"
+            />
+            <p className="text-xs text-gray-400 dark:text-gray-500">{t.accountHint}</p>
+          </div>
+
+          {/* Display Name (editable) */}
           <div className="space-y-1.5">
             <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
               {t.nameLabel} <span className="text-red-500">*</span>
             </Label>
             <Input
-              value={userName}
-              onChange={e => setUserName(e.target.value)}
-              placeholder={lang === 'zh' ? '输入用户名' : 'Enter username'}
+              value={displayName}
+              onChange={e => setDisplayName(e.target.value)}
+              placeholder={lang === 'zh' ? '输入用户名' : 'Enter display name'}
               className="h-10 text-sm border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100 rounded-xl text-gray-900 dark:text-gray-100"
             />
+            <p className="text-xs text-gray-400 dark:text-gray-500">{t.nameHint}</p>
           </div>
 
+          {/* Email (editable) */}
           <div className="space-y-1.5">
-            <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">{lang === 'zh' ? '联系邮箱' : 'Email'}</Label>
+            <Label className="text-xs font-medium text-gray-500 dark:text-gray-400">
+              {t.emailLabel}
+            </Label>
             <Input
               type="email"
               value={email}
@@ -214,6 +174,7 @@ export default function UserProfileDialog({ onClose }: UserProfileDialogProps) {
               placeholder={lang === 'zh' ? '输入邮箱' : 'Enter email'}
               className="h-10 text-sm border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100 rounded-xl text-gray-900 dark:text-gray-100"
             />
+            <p className="text-xs text-gray-400 dark:text-gray-500">{t.emailHint}</p>
           </div>
 
           <div className="flex justify-end gap-3 pt-4">

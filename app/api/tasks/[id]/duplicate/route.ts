@@ -34,6 +34,20 @@ export async function POST(
       },
     })
 
+    // Log the operation
+    await prisma.systemLog.create({
+      data: {
+        level: 'INFO',
+        module: '任务',
+        action: '复制',
+        message: `复制任务: ${original.name}`,
+        details: `新任务: ${duplicated.name}`,
+        userId: original.projectId,
+        userName: 'admin',
+        ip: request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown',
+      },
+    })
+
     return NextResponse.json(duplicated, { status: 201 })
   } catch (error) {
     console.error('Failed to duplicate task:', error)

@@ -1,7 +1,7 @@
 'use client'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { format } from 'date-fns'
+import { format, addDays } from 'date-fns'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -13,10 +13,23 @@ import {
 } from '@/components/ui/dialog'
 import { Plus, Calendar, Clock, AlertCircle, Star, CheckSquare, ChevronDown, Folder } from 'lucide-react'
 import { useApp } from './AppProvider'
+import { calcDaysBetween } from '@/lib/date-utils'
 
 interface Project {
   id: string
   name: string
+}
+
+// 根据开始日期和工期计算结束日期
+function calcEndDate(start: string, dur: number): string {
+  if (!start || !dur) return ''
+  return format(addDays(new Date(start), dur - 1), 'yyyy-MM-dd')
+}
+
+// 根据开始和结束日期计算工期
+function calcDurationFromDates(start: string, end: string): number {
+  if (!start || !end) return 1
+  return calcDaysBetween(new Date(start), new Date(end))
 }
 
 interface Props {
@@ -142,6 +155,24 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
     setForm(f => ({ ...f, projectId: project.id, projectName: project.name }))
     setProjectDropdownOpen(false)
     if (errors.projectId) setErrors(er => ({ ...er, projectId: undefined }))
+  }
+
+  function handleStartDateChange(start: string) {
+    const dur = Number(form.duration) || 3
+    setForm(f => ({ ...f, startDate: start, endDate: calcEndDate(start, dur) }))
+    if (errors.startDate) setErrors(er => ({ ...er, startDate: undefined }))
+  }
+
+  function handleDurationChange(dur: string) {
+    const duration = Number(dur) || 1
+    setForm(f => ({ ...f, duration: dur, endDate: calcEndDate(f.startDate, duration) }))
+    if (errors.duration) setErrors(er => ({ ...er, duration: undefined }))
+  }
+
+  function handleEndDateChange(end: string) {
+    const newDur = calcDurationFromDates(form.startDate, end)
+    setForm(f => ({ ...f, endDate: end, duration: String(newDur) }))
+    if (errors.duration) setErrors(er => ({ ...er, duration: undefined }))
   }
 
   function validate(): boolean {
@@ -278,7 +309,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 <span className="text-red-500 text-xs">*</span>
               </Label>
               <Input type="date" value={form.startDate}
-                onChange={e => { setForm(f => ({ ...f, startDate: e.target.value })); if (errors.startDate) setErrors(er => ({ ...er, startDate: undefined })) }}
+                onChange={e => handleStartDateChange(e.target.value)}
                 className={`${errors.startDate ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all text-gray-900 dark:text-gray-100`}
               />
               {errors.startDate && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.startDate}</p>}
@@ -289,7 +320,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 {lang === 'zh' ? '计划完成日期' : 'Planned End Date'}
               </Label>
               <Input type="date" value={form.endDate || ''}
-                onChange={e => { setForm(f => ({ ...f, endDate: e.target.value })) }}
+                onChange={e => handleEndDateChange(e.target.value)}
                 className="border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100 focus:ring-2 transition-all text-gray-900 dark:text-gray-100"
               />
             </div>
@@ -302,7 +333,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 <span className="text-red-500 text-xs">*</span>
               </Label>
               <Input type="number" min="1" value={form.duration}
-                onChange={e => { setForm(f => ({ ...f, duration: e.target.value })); if (errors.duration) setErrors(er => ({ ...er, duration: undefined })) }}
+                onChange={e => handleDurationChange(e.target.value)}
                 className={`${errors.duration ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all text-gray-900 dark:text-gray-100`}
               />
               {errors.duration && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.duration}</p>}
@@ -435,7 +466,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 <span className="text-red-500 text-xs">*</span>
               </Label>
               <Input type="date" value={form.startDate}
-                onChange={e => { setForm(f => ({ ...f, startDate: e.target.value })); if (errors.startDate) setErrors(er => ({ ...er, startDate: undefined })) }}
+                onChange={e => handleStartDateChange(e.target.value)}
                 className={`${errors.startDate ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all text-gray-900 dark:text-gray-100`}
               />
               {errors.startDate && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.startDate}</p>}
@@ -446,7 +477,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 {lang === 'zh' ? '计划完成日期' : 'Planned End Date'}
               </Label>
               <Input type="date" value={form.endDate || ''}
-                onChange={e => { setForm(f => ({ ...f, endDate: e.target.value })) }}
+                onChange={e => handleEndDateChange(e.target.value)}
                 className="border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100 focus:ring-2 transition-all text-gray-900 dark:text-gray-100"
               />
             </div>
@@ -459,7 +490,7 @@ export default function CreateTaskDialog({ projectId, projectName, projects: pro
                 <span className="text-red-500 text-xs">*</span>
               </Label>
               <Input type="number" min="1" value={form.duration}
-                onChange={e => { setForm(f => ({ ...f, duration: e.target.value })); if (errors.duration) setErrors(er => ({ ...er, duration: undefined })) }}
+                onChange={e => handleDurationChange(e.target.value)}
                 className={`${errors.duration ? 'border-red-300 bg-red-50 dark:border-red-700 dark:bg-red-900/20 focus:border-red-400 focus:ring-red-100' : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 focus:border-blue-400 focus:ring-blue-100'} focus:ring-2 transition-all text-gray-900 dark:text-gray-100`}
               />
               {errors.duration && <p className="text-xs text-red-500 flex items-center gap-1"><AlertCircle className="h-3 w-3" />{errors.duration}</p>}
