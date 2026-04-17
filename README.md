@@ -1,4 +1,8 @@
-# PMTools – Lightweight Project Management
+# PMTools – Lightweight Project Management Tool SE1
+<img width="1274" height="706" alt="image" src="https://github.com/user-attachments/assets/fac8fbbe-85c8-4f20-bdda-86b25043fbd9" />
+
+<img width="1267" height="713" alt="image" src="https://github.com/user-attachments/assets/44d33308-8115-4d1a-b5cd-d2b6ff8d6b8c" />
+
 
 A modern, responsive project management system designed for teams and individuals to track tasks, manage projects, and visualize progress through intuitive views including Kanban boards and Gantt charts.
 
@@ -108,13 +112,22 @@ npm start
 ## Screenshots
 
 *Dashboard View*
-![Dashboard](screenshots/dashboard.png)
+<img width="1267" height="713" alt="image" src="https://github.com/user-attachments/assets/f01a3586-0ec4-4108-89a8-96eb1757d19c" />
+
+*Project View*
+<img width="1266" height="695" alt="image" src="https://github.com/user-attachments/assets/38749e00-3eb5-4116-b471-c7badd531386" />
+<img width="1269" height="722" alt="image" src="https://github.com/user-attachments/assets/274e96dc-c54f-4edc-a3e1-d3d479ab93ae" />
+
+
+*Task View*
+<img width="1261" height="718" alt="image" src="https://github.com/user-attachments/assets/937bab26-b128-42f5-95af-4654de5f7462" />
 
 *Kanban Board*
-![Kanban](screenshots/kanban.png)
+<img width="1262" height="819" alt="image" src="https://github.com/user-attachments/assets/7ed2c540-ca74-404b-aea2-3a81979d14dd" />
+
 
 *Gantt Chart*
-![Gantt](screenshots/gantt.png)
+<img width="1267" height="824" alt="image" src="https://github.com/user-attachments/assets/55e2305f-322b-4c88-8454-589a622fe9cf" />
 
 ## License
 
