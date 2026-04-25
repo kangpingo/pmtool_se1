@@ -31,7 +31,7 @@ services:
       postgres:
         condition: service_healthy
     restart: unless-stopped
-    command: sh -c "npx prisma db push && node server.js"
+    command: node server.js
 
 volumes:
   postgres_data:

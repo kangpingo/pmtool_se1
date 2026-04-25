@@ -33,19 +33,19 @@ export async function POST(req: NextRequest) {
 
     response.cookies.set('auth', 'true', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 1 week
     })
     response.cookies.set('username', username, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     })
     response.cookies.set('displayName', displayName, {
       httpOnly: false,
-      secure: process.env.NODE_ENV === 'production',
+      secure: false,
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7,
     })
@@ -81,19 +81,19 @@ export async function POST(req: NextRequest) {
 
       response.cookies.set('auth', 'true', {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
       })
       response.cookies.set('username', username, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
       })
       response.cookies.set('displayName', displayName, {
         httpOnly: false,
-        secure: process.env.NODE_ENV === 'production',
+        secure: false,
         sameSite: 'lax',
         maxAge: 60 * 60 * 24 * 7,
       })

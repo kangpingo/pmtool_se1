@@ -35,6 +35,8 @@
     ".next/types/**/*.ts"
   ],
   "exclude": [
-    "node_modules"
+    "node_modules",
+    "lib/prisma-se2.ts",
+    "prisma/schema.se2.prisma"
   ]
 }
